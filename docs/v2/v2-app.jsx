@@ -14,7 +14,7 @@ const LandingPage = ({ onNavigate }) => {
           <div>
             <div className="v2-hero__kicker">
               <span className="v2-hero__kicker-rule" />
-              АУДИО-ГИД · ЦЕНТР ПЕТЕРБУРГА · {new Date().getFullYear()}
+              ПЕЙ ГУЛЯЙ КОНТЕНТ ПОТРЕБЛЯЙ
             </div>
             <h1 className="v2-hero__h1">
               Байки<br/>

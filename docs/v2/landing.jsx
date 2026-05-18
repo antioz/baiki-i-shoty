@@ -20,7 +20,7 @@ const LandingPage = ({ onNavigate }) => {
         <div className="bs-landing__hero-inner">
           <div className="bs-landing__kicker">
             <span className="bs-landing__kicker-dot" />
-            АУДИО-ИСТОРИИ · ЦЕНТР ПЕТЕРБУРГА
+            ПЕЙ ГУЛЯЙ КОНТЕНТ ПОТРЕБЛЯЙ
           </div>
           <h1 className="bs-landing__h1">
             Байки<br />и шоты
