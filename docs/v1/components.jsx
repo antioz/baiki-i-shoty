@@ -233,6 +233,7 @@ const NearbyMiniCard = ({ venue, dist, onClick }) => (
 // ────────────────────────────────────────────────────────────────────
 const PaywallModal = ({ story, onClose, onSuccess }) => {
   const [stage, setStage] = useState('idle'); // idle | processing | success
+  const [method, setMethod] = useState('card'); // card | sbp
   const [card, setCard] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
@@ -243,9 +244,7 @@ const PaywallModal = ({ story, onClose, onSuccess }) => {
     return d.length > 2 ? `${d.slice(0,2)}/${d.slice(2)}` : d;
   };
 
-  const submit = (e) => {
-    e.preventDefault();
-    if (stage !== 'idle') return;
+  const finalize = (delay = 1500) => {
     setStage('processing');
     setTimeout(() => {
       setStage('success');
@@ -253,8 +252,29 @@ const PaywallModal = ({ story, onClose, onSuccess }) => {
         window.markUnlocked(story.id);
         onSuccess(story);
       }, 700);
-    }, 1500);
+    }, delay);
   };
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (stage !== 'idle') return;
+    finalize(1500);
+  };
+
+  const paySbp = () => {
+    if (stage !== 'idle') return;
+    finalize(900);
+  };
+
+  const tabStyle = (active) => ({
+    flex: 1, padding: '10px 12px', cursor: stage==='idle'?'pointer':'default',
+    background: active ? '#d4a574' : 'transparent',
+    color: active ? '#0a0a0a' : '#f5f1ea',
+    border: `1px solid ${active ? '#d4a574' : '#2a2a2a'}`,
+    borderRadius: 4, fontFamily: 'inherit', fontSize: 12,
+    letterSpacing: '0.08em', fontWeight: 500, textTransform: 'uppercase',
+    transition: 'all 150ms ease-out',
+  });
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape' && stage === 'idle') onClose(); };
@@ -272,57 +292,97 @@ const PaywallModal = ({ story, onClose, onSuccess }) => {
         <h3 className="bs-modal__title">{story.title}</h3>
         <div className="bs-modal__price">100 ₽</div>
 
-        <form className="bs-modal__form" onSubmit={submit}>
-          <label className="bs-field">
-            <span className="bs-field__label">НОМЕР КАРТЫ</span>
-            <input
-              className="bs-field__input"
-              inputMode="numeric"
-              placeholder="0000 0000 0000 0000"
-              value={card}
-              onChange={e => setCard(formatCard(e.target.value))}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <button type="button" onClick={() => stage==='idle' && setMethod('card')} style={tabStyle(method==='card')}>КАРТА</button>
+          <button type="button" onClick={() => stage==='idle' && setMethod('sbp')} style={tabStyle(method==='sbp')}>СБП</button>
+        </div>
+
+        {method === 'card' && (
+          <form className="bs-modal__form" onSubmit={submit}>
+            <label className="bs-field">
+              <span className="bs-field__label">НОМЕР КАРТЫ</span>
+              <input
+                className="bs-field__input"
+                inputMode="numeric"
+                placeholder="0000 0000 0000 0000"
+                value={card}
+                onChange={e => setCard(formatCard(e.target.value))}
+                disabled={stage !== 'idle'}
+              />
+            </label>
+            <div className="bs-field-row">
+              <label className="bs-field">
+                <span className="bs-field__label">СРОК</span>
+                <input
+                  className="bs-field__input"
+                  inputMode="numeric"
+                  placeholder="ММ/ГГ"
+                  value={expiry}
+                  onChange={e => setExpiry(formatExpiry(e.target.value))}
+                  disabled={stage !== 'idle'}
+                />
+              </label>
+              <label className="bs-field">
+                <span className="bs-field__label">CVC</span>
+                <input
+                  className="bs-field__input"
+                  inputMode="numeric"
+                  placeholder="123"
+                  value={cvc}
+                  onChange={e => setCvc(e.target.value.replace(/\D/g,'').slice(0,3))}
+                  disabled={stage !== 'idle'}
+                />
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className={`bs-modal__cta bs-modal__cta--${stage}`}
+              disabled={!canSubmit || stage !== 'idle'}
+            >
+              {stage === 'idle' && <span>ОПЛАТИТЬ 100 ₽</span>}
+              {stage === 'processing' && <span className="bs-spinner" />}
+              {stage === 'success' && <IconCheck size={20} />}
+            </button>
+
+            <div className="bs-modal__disclaimer">
+              Это демо. Реальная оплата не списывается.
+            </div>
+          </form>
+        )}
+
+        {method === 'sbp' && (
+          <div className="bs-modal__form">
+            <div style={{
+              border: '1px solid #2a2a2a', borderRadius: 4, padding: '20px 16px',
+              textAlign: 'center', marginBottom: 16, background: '#0f0f0f',
+            }}>
+              <div style={{
+                fontFamily: 'JetBrains Mono, monospace', fontSize: 11, letterSpacing: '0.1em',
+                color: '#8a857d', marginBottom: 8,
+              }}>СИСТЕМА БЫСТРЫХ ПЛАТЕЖЕЙ</div>
+              <div style={{
+                fontFamily: 'PT Serif, serif', fontSize: 18, color: '#f5f1ea', marginBottom: 4,
+              }}>Откроется банковское приложение</div>
+              <div style={{ fontSize: 13, color: '#8a857d' }}>Нажмите ниже — это демо, реально ничего не списывается.</div>
+            </div>
+
+            <button
+              type="button"
+              onClick={paySbp}
+              className={`bs-modal__cta bs-modal__cta--${stage}`}
               disabled={stage !== 'idle'}
-            />
-          </label>
-          <div className="bs-field-row">
-            <label className="bs-field">
-              <span className="bs-field__label">СРОК</span>
-              <input
-                className="bs-field__input"
-                inputMode="numeric"
-                placeholder="ММ/ГГ"
-                value={expiry}
-                onChange={e => setExpiry(formatExpiry(e.target.value))}
-                disabled={stage !== 'idle'}
-              />
-            </label>
-            <label className="bs-field">
-              <span className="bs-field__label">CVC</span>
-              <input
-                className="bs-field__input"
-                inputMode="numeric"
-                placeholder="123"
-                value={cvc}
-                onChange={e => setCvc(e.target.value.replace(/\D/g,'').slice(0,3))}
-                disabled={stage !== 'idle'}
-              />
-            </label>
-          </div>
+            >
+              {stage === 'idle' && <span>ОПЛАТИТЬ ЧЕРЕЗ СБП — 100 ₽</span>}
+              {stage === 'processing' && <span className="bs-spinner" />}
+              {stage === 'success' && <IconCheck size={20} />}
+            </button>
 
-          <button
-            type="submit"
-            className={`bs-modal__cta bs-modal__cta--${stage}`}
-            disabled={!canSubmit || stage !== 'idle'}
-          >
-            {stage === 'idle' && <span>ОПЛАТИТЬ 100 ₽</span>}
-            {stage === 'processing' && <span className="bs-spinner" />}
-            {stage === 'success' && <IconCheck size={20} />}
-          </button>
-
-          <div className="bs-modal__disclaimer">
-            Это демо. Реальная оплата не списывается.
+            <div className="bs-modal__disclaimer">
+              Это демо. Реальная оплата не списывается.
+            </div>
           </div>
-        </form>
+        )}
       </div>
     </div>
   );

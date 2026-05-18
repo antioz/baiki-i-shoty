@@ -187,6 +187,7 @@ const StoryRow = ({ story, index, expanded, onToggle, onLockClick, unlocked, ven
 // ─── Paywall Modal ─────────────────────────────────────────────────
 const Paywall = ({ story, onClose, onSuccess }) => {
   const [stage, setStage] = useState('idle');
+  const [method, setMethod] = useState('card');
   const [card, setCard] = useState('4242 4242 ');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
@@ -194,15 +195,25 @@ const Paywall = ({ story, onClose, onSuccess }) => {
   const fmtCard = s => s.replace(/\D/g,'').slice(0,16).replace(/(\d{4})(?=\d)/g, '$1 ');
   const fmtExp = s => { const d = s.replace(/\D/g,'').slice(0,4); return d.length > 2 ? `${d.slice(0,2)}/${d.slice(2)}` : d; };
 
-  const submit = (e) => {
-    e.preventDefault();
-    if (stage !== 'idle') return;
+  const finalize = (delay) => {
     setStage('processing');
     setTimeout(() => {
       setStage('success');
       setTimeout(() => { window.markUnlocked(story.id); onSuccess(story); }, 700);
-    }, 1500);
+    }, delay);
   };
+  const submit = (e) => { e.preventDefault(); if (stage !== 'idle') return; finalize(1500); };
+  const paySbp = () => { if (stage !== 'idle') return; finalize(900); };
+
+  const tabStyle = (active) => ({
+    flex: 1, padding: '10px 12px', cursor: stage==='idle'?'pointer':'default',
+    background: active ? '#d4a574' : 'transparent',
+    color: active ? '#0a0a0a' : '#f5f1ea',
+    border: `1px solid ${active ? '#d4a574' : '#2a2a2a'}`,
+    borderRadius: 4, fontFamily: 'inherit', fontSize: 12,
+    letterSpacing: '0.08em', fontWeight: 500, textTransform: 'uppercase',
+    transition: 'all 150ms ease-out',
+  });
 
   useEffect(() => {
     const k = (e) => e.key === 'Escape' && stage === 'idle' && onClose();
@@ -229,31 +240,62 @@ const Paywall = ({ story, onClose, onSuccess }) => {
             <span className="v2-modal__price-meta">ОДНОРАЗОВО<br/>БЕЗ ПОДПИСКИ</span>
           </div>
 
-          <form className="v2-form" onSubmit={submit}>
-            <label className="v2-field">
-              <span className="v2-field__label">НОМЕР КАРТЫ</span>
-              <input className="v2-field__input" inputMode="numeric" placeholder="0000 0000 0000 0000"
-                value={card} onChange={e => setCard(fmtCard(e.target.value))} disabled={stage !== 'idle'} />
-            </label>
-            <div className="v2-field-row">
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <button type="button" onClick={() => stage==='idle' && setMethod('card')} style={tabStyle(method==='card')}>КАРТА</button>
+            <button type="button" onClick={() => stage==='idle' && setMethod('sbp')} style={tabStyle(method==='sbp')}>СБП</button>
+          </div>
+
+          {method === 'card' && (
+            <form className="v2-form" onSubmit={submit}>
               <label className="v2-field">
-                <span className="v2-field__label">СРОК</span>
-                <input className="v2-field__input" inputMode="numeric" placeholder="ММ/ГГ"
-                  value={expiry} onChange={e => setExpiry(fmtExp(e.target.value))} disabled={stage !== 'idle'} />
+                <span className="v2-field__label">НОМЕР КАРТЫ</span>
+                <input className="v2-field__input" inputMode="numeric" placeholder="0000 0000 0000 0000"
+                  value={card} onChange={e => setCard(fmtCard(e.target.value))} disabled={stage !== 'idle'} />
               </label>
-              <label className="v2-field">
-                <span className="v2-field__label">CVC</span>
-                <input className="v2-field__input" inputMode="numeric" placeholder="•••"
-                  value={cvc} onChange={e => setCvc(e.target.value.replace(/\D/g,'').slice(0,3))} disabled={stage !== 'idle'} />
-              </label>
+              <div className="v2-field-row">
+                <label className="v2-field">
+                  <span className="v2-field__label">СРОК</span>
+                  <input className="v2-field__input" inputMode="numeric" placeholder="ММ/ГГ"
+                    value={expiry} onChange={e => setExpiry(fmtExp(e.target.value))} disabled={stage !== 'idle'} />
+                </label>
+                <label className="v2-field">
+                  <span className="v2-field__label">CVC</span>
+                  <input className="v2-field__input" inputMode="numeric" placeholder="•••"
+                    value={cvc} onChange={e => setCvc(e.target.value.replace(/\D/g,'').slice(0,3))} disabled={stage !== 'idle'} />
+                </label>
+              </div>
+              <button type="submit" className={`v2-cta v2-cta--${stage}`} disabled={!can || stage !== 'idle'}>
+                {stage === 'idle' && <span>ОПЛАТИТЬ 100 ₽</span>}
+                {stage === 'processing' && <span className="v2-spinner" />}
+                {stage === 'success' && <Check size={18} stroke={2.5} />}
+              </button>
+              <div className="v2-disclaimer">Это демо. Реальная оплата не списывается.</div>
+            </form>
+          )}
+
+          {method === 'sbp' && (
+            <div className="v2-form">
+              <div style={{
+                border: '1px solid #2a2a2a', borderRadius: 4, padding: '20px 16px',
+                textAlign: 'center', marginBottom: 16, background: '#0f0f0f',
+              }}>
+                <div style={{
+                  fontFamily: 'JetBrains Mono, monospace', fontSize: 11, letterSpacing: '0.1em',
+                  color: '#8a857d', marginBottom: 8,
+                }}>СИСТЕМА БЫСТРЫХ ПЛАТЕЖЕЙ</div>
+                <div style={{
+                  fontFamily: 'PT Serif, serif', fontSize: 17, color: '#f5f1ea', marginBottom: 4,
+                }}>Откроется банковское приложение</div>
+                <div style={{ fontSize: 13, color: '#8a857d' }}>Это демо — реально ничего не списывается.</div>
+              </div>
+              <button type="button" onClick={paySbp} className={`v2-cta v2-cta--${stage}`} disabled={stage !== 'idle'}>
+                {stage === 'idle' && <span>ОПЛАТИТЬ ЧЕРЕЗ СБП — 100 ₽</span>}
+                {stage === 'processing' && <span className="v2-spinner" />}
+                {stage === 'success' && <Check size={18} stroke={2.5} />}
+              </button>
+              <div className="v2-disclaimer">Это демо. Реальная оплата не списывается.</div>
             </div>
-            <button type="submit" className={`v2-cta v2-cta--${stage}`} disabled={!can || stage !== 'idle'}>
-              {stage === 'idle' && <span>ОПЛАТИТЬ 100 ₽</span>}
-              {stage === 'processing' && <span className="v2-spinner" />}
-              {stage === 'success' && <Check size={18} stroke={2.5} />}
-            </button>
-            <div className="v2-disclaimer">Это демо. Реальная оплата не списывается.</div>
-          </form>
+          )}
         </div>
       </div>
     </div>
