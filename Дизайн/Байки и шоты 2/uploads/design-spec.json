@@ -1,0 +1,233 @@
+{
+  "project": {
+    "name": "Байки и Шоты",
+    "name_en": "Tales & Shots",
+    "language": "ru",
+    "description": "Clickable prototype of an audio-story project about historic buildings and venues in central Saint Petersburg. Two entry points: QR code in a venue → venue page; landing with city map → venue page. One free story per venue, others paid (100₽) — payment is mocked.",
+    "type": "clickable-prototype",
+    "stack": ["Next.js 15 App Router", "TypeScript", "Tailwind CSS", "react-leaflet", "Lucide icons"]
+  },
+
+  "design_direction": {
+    "name": "Night Petersburg",
+    "principles": [
+      "Dark, cinematic, minimal — built for evening listening in a bar",
+      "One amber accent, never more",
+      "Generous whitespace, sparse UI, the map and the story do the talking",
+      "No emoji, no gradients (except hero photo overlays), no heavy shadows",
+      "1px borders instead of shadows; radius 4-8px max"
+    ],
+    "palette": {
+      "bg_primary": "#0a0a0a",
+      "bg_elevated": "#141414",
+      "bg_overlay": "#1c1c1c",
+      "border": "#2a2a2a",
+      "text_primary": "#f5f1ea",
+      "text_secondary": "#8a857d",
+      "text_muted": "#555049",
+      "accent": "#d4a574",
+      "accent_hover": "#e8b988",
+      "locked": "#6b4423",
+      "success": "#5eb87a"
+    },
+    "typography": {
+      "headings": { "family": "PT Serif, GT Super Display, Georgia, serif", "weight": 400, "letter_spacing": "-0.02em" },
+      "ui": { "family": "Inter, Geist, system-ui, sans-serif", "weights": [400, 500] },
+      "mono": { "family": "JetBrains Mono, monospace", "size_px": 13, "transform": "uppercase" },
+      "sizes": {
+        "h1_landing": "clamp(48px, 7vw, 96px)",
+        "h1_venue": "clamp(36px, 5vw, 64px)",
+        "h2": "28px",
+        "body": "16px / 1.6",
+        "caption": "13px"
+      }
+    },
+    "interactions": {
+      "transition": "200ms ease-out",
+      "card_hover": "translateY(-2px) + border-color: accent",
+      "modal_appear": "fade + scale 250ms",
+      "marker_hover": "scale 14px → 20px, glow intensifies",
+      "play_button": "morph play↔pause 150ms"
+    },
+    "icons": { "library": "Lucide", "stroke": "1.5px", "set": ["lock", "play", "pause", "map-pin", "arrow-right", "clock", "check"] },
+    "map": {
+      "lib": "Leaflet via react-leaflet",
+      "tiles": "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
+      "attribution": "© Stadia Maps © OpenStreetMap",
+      "center": [59.935, 30.335],
+      "zoom": 14,
+      "markers": {
+        "shape": "circle",
+        "size_px": 14,
+        "hover_size_px": 20,
+        "fill": "#d4a574",
+        "stroke": "2px #f5f1ea",
+        "glow": "0 0 12px rgba(212,165,116,0.4)"
+      }
+    }
+  },
+
+  "pages": [
+    {
+      "route": "/",
+      "name": "Landing",
+      "layout": "fullscreen-map-with-hero-overlay",
+      "structure": [
+        {
+          "type": "header",
+          "fixed": true,
+          "transparent": true,
+          "content": { "logo_left": "Байки и шоты", "links_right": ["О проекте"] }
+        },
+        {
+          "type": "hero_overlay",
+          "position": "absolute, top-left over map",
+          "max_width_px": 640,
+          "padding_px": 80,
+          "fields": [
+            { "el": "h1", "text": "Байки и шоты", "style": "serif, huge" },
+            { "el": "p", "text": "Аудио-истории о зданиях и людях центра Петербурга", "style": "sans, secondary" },
+            { "el": "meta", "text": "16 ИСТОРИЙ · 4 МЕСТА · ~45 МИН", "style": "mono, accent" }
+          ]
+        },
+        {
+          "type": "map_fullscreen",
+          "height": "100vh",
+          "markers_from": "venues",
+          "marker_click": "navigate to /venue/[slug]",
+          "marker_tooltip": "{venue.name} · {story_count} историй"
+        }
+      ],
+      "explicitly_omitted": ["venue list section", "footer with content", "any other section below the map"]
+    },
+    {
+      "route": "/venue/[slug]",
+      "name": "Venue",
+      "structure": [
+        { "type": "header", "fixed": true },
+        {
+          "type": "venue_cover",
+          "layout": "full-width photo with dark bottom gradient",
+          "height_vh": 60,
+          "fields": [
+            { "el": "kicker", "text": "{venue.type_uppercase}", "style": "mono accent" },
+            { "el": "h1", "text": "{venue.name}", "style": "serif huge" },
+            { "el": "address", "text": "{venue.address_uppercase}", "style": "mono secondary" },
+            { "el": "blurb", "text": "{venue.blurb}", "style": "body, 2 lines max" }
+          ]
+        },
+        {
+          "type": "stories_section",
+          "heading": { "el": "h2", "text": "Истории", "style": "serif" },
+          "list": "{venue.stories}",
+          "card": "StoryCard"
+        },
+        {
+          "type": "nearby_section",
+          "heading": { "el": "h2", "text": "РЯДОМ", "style": "mono small secondary" },
+          "items_count": 3,
+          "card": "NearbyMiniCard",
+          "card_fields_only": ["type (mono)", "name (serif)", "distance_meters (mono)"],
+          "card_excludes": ["photo", "description", "duration"]
+        }
+      ],
+      "explicitly_omitted": [
+        "mini-map on venue page",
+        "route deep-links (yandex maps, 2gis)",
+        "any 'build route' CTA — users are already at the venue"
+      ]
+    }
+  ],
+
+  "components": {
+    "StoryCard": {
+      "states": {
+        "free": "play icon amber, label 'Бесплатно', click expands inline player",
+        "locked": "lock icon muted, price '100 ₽', click opens PaywallModal",
+        "unlocked": "play icon amber, label 'Куплено', click expands inline player"
+      },
+      "fields_visible": ["title (serif)", "duration mm:ss (mono)"],
+      "row_layout": "icon — title (flex-1) — duration"
+    },
+    "NearbyMiniCard": {
+      "purpose": "for bar-hopping — minimum info to decide next stop",
+      "size": "compact, ~200px wide",
+      "fields": ["type uppercase mono", "name serif", "distance meters mono"],
+      "no": ["photo", "blurb", "story count"]
+    },
+    "AudioPlayer": {
+      "behavior": "singleton — only one track plays at a time",
+      "placement": { "mobile": "sticky bottom bar", "desktop": "inline in expanded StoryCard, persists in sticky bar on scroll" },
+      "controls": ["play/pause", "progress bar (track=border, fill=accent)", "speed 1× / 1.25× / 1.5×", "current/total time (mono)"]
+    },
+    "PaywallModal": {
+      "trigger": "click on locked StoryCard",
+      "structure": [
+        "backdrop: rgba(0,0,0,0.7) + backdrop-blur 8px",
+        "card 420px: H3 story title (serif), duration (mono), big '100 ₽' (serif), card-number fake input, expiry+cvc row, primary amber button 'ОПЛАТИТЬ 100 ₽', tiny secondary text 'Это демо. Реальная оплата не списывается.'"
+      ],
+      "interaction_sequence": [
+        "click button → button content swaps to spinner",
+        "1.5s delay",
+        "spinner → green check (success color) 500ms",
+        "modal closes with fade",
+        "localStorage.setItem('unlocked:'+story_id, 'true')",
+        "the just-unlocked StoryCard auto-plays"
+      ]
+    },
+    "CityMap": {
+      "tiles": "Stadia Alidade Smooth Dark",
+      "markers": "amber circles with glow",
+      "popup_on_hover": "{name} · {story_count} историй",
+      "click": "navigate to venue page"
+    }
+  },
+
+  "data": {
+    "venues": [
+      { "slug": "terminal-bar", "type": "БАР", "name": "Терминал Бар", "address": "Рубинштейна, 25", "lat": 59.9272, "lng": 30.3470, "stories": 4 },
+      { "slug": "tsvetochki",   "type": "БАР", "name": "Цветочки",     "address": "Гороховая, 49",   "lat": 59.9248, "lng": 30.3211, "stories": 4 },
+      { "slug": "grand-europa", "type": "ОТЕЛЬ", "name": "Гранд Отель Европа", "address": "Михайловская, 1/7", "lat": 59.9358, "lng": 30.3293, "stories": 4 },
+      { "slug": "palkin",       "type": "РЕСТОРАН", "name": "Палкинъ", "address": "Невский, 47", "lat": 59.9335, "lng": 30.3441, "stories": 4 }
+    ],
+    "story_pricing": { "free_per_venue": 1, "paid_per_venue": 3, "price_rub": 100 }
+  },
+
+  "state": {
+    "unlock_storage": "localStorage",
+    "key_pattern": "unlocked:<story_id>",
+    "scope": "per-story (not per-venue)"
+  },
+
+  "out_of_scope": [
+    "real payment integration",
+    "backend / API",
+    "admin panel",
+    "user accounts / auth",
+    "QR generation page (will be internal tool later)",
+    "analytics",
+    "route deep-links to external maps",
+    "venue list on landing — map is the only navigation"
+  ],
+
+  "references": {
+    "ux_competitors": [
+      { "name": "VoiceMap", "url": "https://voicemap.me/", "note": "main living analog" },
+      { "name": "TravelStorys", "url": "https://travelstorys.com/" },
+      { "name": "izi.TRAVEL", "url": "https://izi.travel/" },
+      { "name": "STQRY", "url": "https://stqry.com/" },
+      { "name": "Detour (archived)", "url": "https://web.archive.org/web/2017/https://www.detour.com/" }
+    ],
+    "atmosphere_and_typography": [
+      { "name": "Atlas Obscura", "url": "https://www.atlasobscura.com/" },
+      { "name": "The Pudding", "url": "https://pudding.cool/" },
+      { "name": "Are.na", "url": "https://www.are.na/" },
+      { "name": "Awwwards Maps/Geolocation", "url": "https://www.awwwards.com/awwwards/collections/maps-geolocation-streetview/" }
+    ],
+    "audio_player_ui": [
+      { "name": "Overcast", "url": "https://overcast.fm/" },
+      { "name": "Pocket Casts", "url": "https://pocketcasts.com/" },
+      { "name": "Spotify episode pages", "url": "https://open.spotify.com/" }
+    ]
+  }
+}

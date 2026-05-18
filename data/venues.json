@@ -1,0 +1,52 @@
+{
+  "venues": [
+    {
+      "id": "v_terminal",
+      "slug": "terminal-bar",
+      "type": "БАР",
+      "name": "Терминал Бар",
+      "address": "Рубинштейна, 25",
+      "lat": 59.9272,
+      "lng": 30.3470,
+      "cover": "/img/terminal-bar.jpg",
+      "blurb": "Бар на самой барной улице страны. Двадцать пять метров от Достоевского до похмелья.",
+      "story_ids": ["s_term_01", "s_term_02", "s_term_03", "s_term_04"]
+    },
+    {
+      "id": "v_tsvetochki",
+      "slug": "tsvetochki",
+      "type": "БАР",
+      "name": "Цветочки",
+      "address": "Гороховая, 49",
+      "lat": 59.9248,
+      "lng": 30.3211,
+      "cover": "/img/tsvetochki.jpg",
+      "blurb": "Маленький бар на улице, где жил Распутин и творил Достоевский. Дворовый Питер в одной двери.",
+      "story_ids": ["s_tsv_01", "s_tsv_02", "s_tsv_03", "s_tsv_04"]
+    },
+    {
+      "id": "v_grand_europa",
+      "slug": "grand-europa",
+      "type": "ОТЕЛЬ",
+      "name": "Гранд Отель Европа",
+      "address": "Михайловская, 1/7",
+      "lat": 59.9358,
+      "lng": 30.3293,
+      "cover": "/img/grand-europa.jpg",
+      "blurb": "Сто пятьдесят лет роскоши и шпионских историй. Здесь умер Чайковский и пил Кокто.",
+      "story_ids": ["s_gre_01", "s_gre_02", "s_gre_03", "s_gre_04"]
+    },
+    {
+      "id": "v_palkin",
+      "slug": "palkin",
+      "type": "РЕСТОРАН",
+      "name": "Палкинъ",
+      "address": "Невский, 47",
+      "lat": 59.9335,
+      "lng": 30.3441,
+      "cover": "/img/palkin.jpg",
+      "blurb": "Работает с 1785 года. Здесь ужинал Достоевский и обсуждал водку Менделеев.",
+      "story_ids": ["s_pal_01", "s_pal_02", "s_pal_03", "s_pal_04"]
+    }
+  ]
+}
