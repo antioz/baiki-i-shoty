@@ -117,35 +117,48 @@ const CityMap = ({ venues, onMarkerClick, activeSlug }) => {
 // AudioPlayer — mock, singleton via global state
 // ────────────────────────────────────────────────────────────────────
 const AudioPlayer = ({ story, venueName, onClose }) => {
-  const total = window.durationSeconds(story.duration);
+  const audioRef = useRef(null);
   const [pos, setPos] = useState(0);
+  const [total, setTotal] = useState(window.durationSeconds(story.duration));
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed] = useState(1);
-  const rafRef = useRef(null);
-  const lastTickRef = useRef(performance.now());
 
   useEffect(() => {
-    lastTickRef.current = performance.now();
-    const tick = (now) => {
-      const dt = (now - lastTickRef.current) / 1000;
-      lastTickRef.current = now;
-      if (playing) {
-        setPos(prev => {
-          const next = prev + dt * speed;
-          if (next >= total) { setPlaying(false); return total; }
-          return next;
-        });
-      }
-      rafRef.current = requestAnimationFrame(tick);
+    const a = audioRef.current;
+    if (!a) return;
+    const onMeta = () => setTotal(a.duration || total);
+    const onTime = () => setPos(a.currentTime);
+    const onEnded = () => setPlaying(false);
+    a.addEventListener('loadedmetadata', onMeta);
+    a.addEventListener('timeupdate', onTime);
+    a.addEventListener('ended', onEnded);
+    a.playbackRate = speed;
+    a.play().catch(() => setPlaying(false));
+    return () => {
+      a.removeEventListener('loadedmetadata', onMeta);
+      a.removeEventListener('timeupdate', onTime);
+      a.removeEventListener('ended', onEnded);
+      a.pause();
     };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [playing, speed, total]);
+  }, [story.id]);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) a.play().catch(() => setPlaying(false));
+    else a.pause();
+  }, [playing]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = speed;
+  }, [speed]);
 
   const seek = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    setPos(pct * total);
+    const newPos = pct * total;
+    if (audioRef.current) audioRef.current.currentTime = newPos;
+    setPos(newPos);
   };
 
   const nextSpeed = () => {
@@ -154,6 +167,7 @@ const AudioPlayer = ({ story, venueName, onClose }) => {
 
   return (
     <div className="bs-player">
+      <audio ref={audioRef} src={story.audio} preload="metadata" />
       <div className="bs-player__inner">
         <button className="bs-player__playbtn" onClick={() => setPlaying(p => !p)} aria-label={playing ? 'Пауза' : 'Играть'}>
           {playing ? <IconPause size={18} /> : <IconPlay size={18} />}
@@ -163,7 +177,7 @@ const AudioPlayer = ({ story, venueName, onClose }) => {
           <div className="bs-player__venue">{venueName}</div>
         </div>
         <div className="bs-player__progress" onClick={seek}>
-          <div className="bs-player__progress-fill" style={{ width: `${(pos/total)*100}%` }} />
+          <div className="bs-player__progress-fill" style={{ width: `${total ? (pos/total)*100 : 0}%` }} />
         </div>
         <div className="bs-player__time">
           <span>{window.formatTime(pos)}</span>
