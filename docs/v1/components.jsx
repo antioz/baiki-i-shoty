@@ -306,9 +306,50 @@ const PaywallModal = ({ story, onClose, onSuccess }) => {
         <h3 className="bs-modal__title">{story.title}</h3>
         <div className="bs-modal__price">100 ₽</div>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <button type="button" onClick={() => stage==='idle' && setMethod('card')} style={tabStyle(method==='card')}>КАРТА</button>
-          <button type="button" onClick={() => stage==='idle' && setMethod('sbp')} style={tabStyle(method==='sbp')}>СБП</button>
+        {/* Stripe-style payment method picker */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
+          <button
+            type="button"
+            onClick={() => stage==='idle' && setMethod('card')}
+            disabled={stage!=='idle'}
+            style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between', gap:8,
+              padding:'14px 14px', cursor: stage==='idle'?'pointer':'default',
+              background: method==='card' ? '#1a1410' : '#0f0f0f',
+              border: `1.5px solid ${method==='card' ? '#d4a574' : '#2a2a2a'}`,
+              borderRadius: 6, transition:'all 150ms ease-out', textAlign:'left',
+              fontFamily:'inherit', color:'#f5f1ea',
+            }}>
+            <span style={{ fontSize:13, fontWeight:500, letterSpacing:'0.04em' }}>Карта</span>
+            <span style={{ display:'flex', gap:4, alignItems:'center' }}>
+              <span style={{ fontSize:9, fontWeight:700, background:'#1a1f71', color:'#fff', padding:'3px 6px', borderRadius:3, letterSpacing:'0.02em' }}>VISA</span>
+              <span style={{ display:'inline-flex', gap:0 }}>
+                <span style={{ width:14, height:14, borderRadius:'50%', background:'#eb001b', display:'inline-block' }} />
+                <span style={{ width:14, height:14, borderRadius:'50%', background:'#f79e1b', display:'inline-block', marginLeft:-5, mixBlendMode:'screen' }} />
+              </span>
+              <span style={{ fontSize:9, fontWeight:700, background:'#0f754e', color:'#fff', padding:'3px 6px', borderRadius:3, letterSpacing:'0.02em' }}>МИР</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { if (stage==='idle') { setMethod('sbp'); paySbp(); } }}
+            disabled={stage!=='idle'}
+            style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between', gap:8,
+              padding:'14px 14px', cursor: stage==='idle'?'pointer':'default',
+              background: method==='sbp' ? '#1a1410' : '#0f0f0f',
+              border: `1.5px solid ${method==='sbp' ? '#d4a574' : '#2a2a2a'}`,
+              borderRadius: 6, transition:'all 150ms ease-out', textAlign:'left',
+              fontFamily:'inherit', color:'#f5f1ea',
+            }}>
+            <span style={{ fontSize:13, fontWeight:500, letterSpacing:'0.04em' }}>СБП</span>
+            <span style={{
+              display:'inline-flex', alignItems:'center', justifyContent:'center',
+              width:38, height:22, borderRadius:4,
+              background:'linear-gradient(135deg, #5b2d90 0%, #e9358f 60%, #ffd14d 100%)',
+              fontSize:9, fontWeight:700, color:'#fff', letterSpacing:'0.04em',
+            }}>СБП</span>
+          </button>
         </div>
 
         {method === 'card' && (
@@ -367,31 +408,11 @@ const PaywallModal = ({ story, onClose, onSuccess }) => {
 
         {method === 'sbp' && (
           <div className="bs-modal__form">
-            <div style={{
-              border: '1px solid #2a2a2a', borderRadius: 4, padding: '20px 16px',
-              textAlign: 'center', marginBottom: 16, background: '#0f0f0f',
-            }}>
-              <div style={{
-                fontFamily: 'JetBrains Mono, monospace', fontSize: 11, letterSpacing: '0.1em',
-                color: '#8a857d', marginBottom: 8,
-              }}>СИСТЕМА БЫСТРЫХ ПЛАТЕЖЕЙ</div>
-              <div style={{
-                fontFamily: 'PT Serif, serif', fontSize: 18, color: '#f5f1ea', marginBottom: 4,
-              }}>Откроется банковское приложение</div>
-              <div style={{ fontSize: 13, color: '#8a857d' }}>Нажмите ниже — это демо, реально ничего не списывается.</div>
-            </div>
-
-            <button
-              type="button"
-              onClick={paySbp}
-              className={`bs-modal__cta bs-modal__cta--${stage}`}
-              disabled={stage !== 'idle'}
-            >
-              {stage === 'idle' && <span>ОПЛАТИТЬ ЧЕРЕЗ СБП — 100 ₽</span>}
+            <button type="button" className={`bs-modal__cta bs-modal__cta--${stage}`} disabled>
+              {stage === 'idle' && <span>ОТКРЫВАЕМ СБП…</span>}
               {stage === 'processing' && <span className="bs-spinner" />}
               {stage === 'success' && <IconCheck size={20} />}
             </button>
-
             <div className="bs-modal__disclaimer">
               Это демо. Реальная оплата не списывается.
             </div>
