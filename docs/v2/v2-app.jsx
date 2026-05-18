@@ -149,7 +149,7 @@ const VenuePage = ({ slug, onNavigate, expandedStory, setExpandedStory, openPayw
 
       <section>
         <div className="v2-section-head">
-          <h2 className="v2-section-head__h2">Рядом</h2>
+          <h2 className="v2-section-head__h2">Можно пройтись</h2>
           <div className="v2-section-head__meta">в радиусе пешей доступности</div>
         </div>
         <div className="v2-nearby">

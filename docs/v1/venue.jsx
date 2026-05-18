@@ -84,7 +84,7 @@ const VenuePage = ({ slug, onNavigate, expandedStory, setExpandedStory, openPayw
         </section>
 
         <section className="bs-nearby">
-          <h2 className="bs-h-mono">РЯДОМ</h2>
+          <h2 className="bs-h-mono">МОЖНО ПРОЙТИСЬ</h2>
           <div className="bs-nearby__grid">
             {nearby.map(({ venue: v, dist }) => (
               <NearbyMiniCard

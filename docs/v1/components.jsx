@@ -34,10 +34,8 @@ const Header = ({ transparent = true, onNavigate }) => {
   return (
     <header className={`bs-header ${showBg ? 'bs-header--solid' : ''}`}>
       <div className="bs-header__inner">
-        <button className="bs-logo" onClick={() => onNavigate({ route: 'landing' })}>
-          <span className="bs-logo__mark">Б&amp;Ш</span>
-          <span className="bs-logo__text">Байки и шоты</span>
-        </button>
+        <button className="bs-logo" onClick={() => onNavigate({ route: 'landing' })} aria-label="На главную" />
+
         <nav className="bs-nav">
           <button className="bs-nav__link" onClick={() => onNavigate({ route: 'about' })}>О проекте</button>
         </nav>

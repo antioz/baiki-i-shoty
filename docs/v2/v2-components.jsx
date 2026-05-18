@@ -21,9 +21,7 @@ const X = (p) => <Icon {...p}><line x1="6" y1="6" x2="18" y2="18"/><line x1="18"
 const Header = ({ onNavigate }) => (
   <header className="v2-header">
     <div className="v2-header__inner">
-      <button className="v2-logo" onClick={() => onNavigate({ route: 'landing' })}>
-        <span className="v2-logo__b">Байки <em className="v2-logo__amp">&amp;</em> Шоты</span>
-        <span className="v2-logo__sub">SPB · v.0.2</span>
+      <button className="v2-logo" onClick={() => onNavigate({ route: 'landing' })} aria-label="На главную">
       </button>
       <div className="v2-stamp">
         Saint Petersburg <span className="v2-stamp__dot" /> 59.9335° N
