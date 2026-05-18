@@ -64,12 +64,12 @@ const CityMap = ({ venues, onMarkerClick, activeSlug }) => {
       scrollWheelZoom: true,
     });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
     }).addTo(map);
     // Attribution as a discrete corner element
     L.control.attribution({ position: 'bottomleft', prefix: false })
-      .addAttribution('© Stadia Maps · © OpenStreetMap')
+      .addAttribution('© OpenStreetMap · © CARTO')
       .addTo(map);
 
     mapRef.current = map;
